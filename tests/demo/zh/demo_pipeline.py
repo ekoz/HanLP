@@ -4,8 +4,8 @@
 
 import hanlp
 
-tokenizer = hanlp.load('CTB6_CONVSEG')
-tagger = hanlp.load('CTB5_POS_RNN_FASTTEXT_ZH')
+tokenizer = hanlp.load('LARGE_ALBERT_BASE')
+tagger = hanlp.load('CTB9_POS_ALBERT_BASE')
 syntactic_parser = hanlp.load('CTB7_BIAFFINE_DEP_ZH')
 semantic_parser = hanlp.load('SEMEVAL16_TEXT_BIAFFINE_ZH')
 

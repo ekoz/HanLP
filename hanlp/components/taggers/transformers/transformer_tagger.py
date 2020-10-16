@@ -8,10 +8,10 @@ import tensorflow as tf
 
 from hanlp.common.transform import Transform
 from hanlp.components.taggers.tagger import TaggerComponent
-from hanlp.components.taggers.transformers.metrics import MaskedSparseCategoricalAccuracy
+from hanlp.components.taggers.transformers.metrics import Accuracy
 from hanlp.components.taggers.transformers.transformer_transform import TransformerTransform
 from hanlp.layers.transformers.loader import build_transformer
-from hanlp.losses.sparse_categorical_crossentropy import SparseCategoricalCrossentropyOverBatchFirstDim
+from hanlp.losses.sparse_categorical_crossentropy import MaskedSparseCategoricalCrossentropyOverBatchFirstDim
 from hanlp.optimizers.adamw import create_optimizer
 from hanlp.utils.util import merge_locals_kwargs
 
@@ -99,7 +99,7 @@ class TransformerTagger(TaggerComponent):
 
     def build_loss(self, loss, **kwargs):
         if not loss:
-            return SparseCategoricalCrossentropyOverBatchFirstDim()
+            return MaskedSparseCategoricalCrossentropyOverBatchFirstDim(self.transform.tag_vocab.pad_idx)
         return super().build_loss(loss, **kwargs)
 
     def load_transform(self, save_dir) -> Transform:
@@ -107,3 +107,6 @@ class TransformerTagger(TaggerComponent):
         self.transform.tokenizer = build_transformer(self.config.transformer, self.config.max_seq_length,
                                                      len(self.transform.tag_vocab), tagging=True, tokenizer_only=True)
         return self.transform
+
+    def build_metrics(self, metrics, logger: logging.Logger, **kwargs):
+        return Accuracy(self.transform.tag_vocab.pad_idx)

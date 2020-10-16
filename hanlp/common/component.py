@@ -95,7 +95,7 @@ class KerasComponent(Component, ABC):
         samples = size_of_dataset(tst_data)
         num_batches = math.ceil(samples / batch_size)
         if warm_up:
-            self.model.predict_on_batch(tst_data.take(1))
+            self.model.predict_on_batch(list(tst_data.take(1))[0])
         if output:
             assert save_dir, 'Must pass save_dir in order to output'
             if isinstance(output, bool):
@@ -285,7 +285,7 @@ class KerasComponent(Component, ABC):
         if isinstance(optimizer, (str, dict)):
             custom_objects = {'AdamWeightDecay': AdamWeightDecay}
             optimizer: tf.keras.optimizers.Optimizer = tf.keras.utils.deserialize_keras_object(optimizer,
-                                                                                               module_objects=tf.keras.optimizers,
+                                                                                               module_objects=vars(tf.keras.optimizers),
                                                                                                custom_objects=custom_objects)
         self.config.optimizer = tf.keras.utils.serialize_keras_object(optimizer)
         return optimizer

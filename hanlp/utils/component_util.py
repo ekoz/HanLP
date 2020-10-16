@@ -7,7 +7,7 @@ from sys import exit
 
 from hanlp import pretrained
 from hanlp.common.component import Component
-from hanlp.utils.io_util import get_resource, load_json, eprint
+from hanlp.utils.io_util import get_resource, load_json, eprint, get_latest_info_from_pypi
 from hanlp.utils.reflection import object_from_class_path, str_to_type
 from hanlp import version
 
@@ -51,16 +51,33 @@ def load_from_meta_file(save_dir: str, meta_filename='meta.json', transform_only
             obj.meta['load_path'] = load_path
         return obj
     except Exception as e:
-        eprint(f'Failed to load {identifier}. See stack trace below')
+        eprint(f'Failed to load {identifier}. See traceback below:')
+        eprint(f'{"ERROR LOG BEGINS":=^80}')
         traceback.print_exc()
+        eprint(f'{"ERROR LOG ENDS":=^80}')
+        if isinstance(e, ModuleNotFoundError):
+            eprint('Some modules required by this model are missing. Please install the full version:\n'
+                   'pip install hanlp[full]')
+        from pkg_resources import parse_version
         model_version = meta.get("hanlp_version", "unknown")
-        cur_version = version.__version__
-        if model_version != cur_version:
+        if model_version == '2.0.0':  # Quick fix: the first version used a wrong string
+            model_version = '2.0.0-alpha.0'
+        model_version = parse_version(model_version)
+        installed_version = parse_version(version.__version__)
+        try:
+            latest_version = get_latest_info_from_pypi()
+        except:
+            latest_version = None
+        if model_version > installed_version:
+            eprint(f'{identifier} was created with hanlp-{model_version}, '
+                   f'while you are running a lower version: {installed_version}. ')
+        if installed_version != latest_version:
             eprint(
-                f'{identifier} was created with hanlp-{model_version}, while you are running {cur_version}. '
-                f'Try to upgrade hanlp with\n'
-                f'pip install --upgrade hanlp\n'
-                f'If the problem persists, please submit an issue to https://github.com/hankcs/HanLP/issues .')
+                f'Please upgrade hanlp with:\n'
+                f'pip install --upgrade hanlp\n')
+        eprint(
+            'If the problem still persists, please submit an issue to https://github.com/hankcs/HanLP/issues\n'
+            'When reporting an issue, make sure to paste the FULL ERROR LOG above.')
         exit(1)
 
 
